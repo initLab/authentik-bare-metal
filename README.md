@@ -3,7 +3,7 @@ This is a repository of install scripts for [Authentik](https://goauthentik.io) 
 
 Inspired by https://github.com/gtsatsis/authentik-bare-metal
 
- - This does **not** install, nor configure Postgres or Redis. Once they're set up, set the configuration values in `/etc/authentik/config.yml`.
+ - This does **not** install, nor configure Postgres or Redis. Once they're set up, set the configuration values in `/home/authentik/src/.local.env.yml`.
  - This installs the `main` branch without a tag.
  - Python is **installed from source**, as the packages for 3.11 are missing from the Debian repositories.
  - **This setup is fully unsupported, and has no fallbacks if any step fails.**
