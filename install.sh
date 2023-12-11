@@ -10,7 +10,7 @@ BIN_DIR="${DOTLOCAL}/bin"
 SRC_DIR=$BASE_DIR/src
 
 mkdir -p "$BIN_DIR"
-PATH="${PATH}:${BIN_DIR}"
+PATH="${BIN_DIR}:${PATH}"
 
 cd "$BASE_DIR"
 
