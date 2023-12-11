@@ -61,7 +61,7 @@ then
 	curl https://bootstrap.pypa.io/get-pip.py | python3
 fi
 
-if ! command -v virtualenv &>/dev/null
+if ! python3 -m virtualenv --version &>/dev/null
 then
 	python3 -m pip install virtualenv
 fi
