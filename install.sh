@@ -53,6 +53,7 @@ then
 
   wget -qO- "https://golang.org/dl/${GO_LATEST_URL}" | tar -zxf -
   cp -prf go/* "${DOTLOCAL}"
+  chmod -R u+w go
   rm -rf go
 fi
 
