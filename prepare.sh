@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -x
+
 if [ "$(id -u)" -ne 0 ]
 then
   echo 'Please run as root!' >&2
