@@ -3,49 +3,67 @@
 set -e
 set -x
 
+: "${ARCH:=amd64}"
 BASE_DIR=$HOME
-PREFIX=$BASE_DIR/.local
+DOTLOCAL=$BASE_DIR/.local
+BIN_DIR="${DOTLOCAL}/bin"
 SRC_DIR=$BASE_DIR/src
+
+mkdir -p "$BIN_DIR"
+PATH="${PATH}:${BIN_DIR}"
 
 cd "$BASE_DIR"
 
-if ! command -v python3.11 &>/dev/null
+if python3 -c 'import sys; sys.exit(sys.version_info < (3, 11, 1))' &>/dev/null
 then
 	wget -qO- https://www.python.org/ftp/python/3.11.1/Python-3.11.1.tgz | tar -zxf
 	cd Python-3.11.1
-	./configure --enable-optimizations --prefix="$PREFIX"
-	sudo make altinstall # Install Python 3.11.1
+	./configure --enable-optimizations --prefix="$DOTLOCAL"
+	make altinstall
 	cd -
 	rm -rf Python-3.11.1
 fi
 
 if ! command -v yq &>/dev/null
 then
-	wget https://github.com/mikefarah/yq/releases/download/v4.30.8/yq_linux_amd64 -qO "$PREFIX"/bin/yq
-	chmod +x "$PREFIX"/bin/yq
+  YQ_LATEST="$(wget -qO- "https://api.github.com/repos/mikefarah/yq/releases/latest" | grep -Po '"tag_name": "\K.*?(?=")')"
+  wget "https://github.com/mikefarah/yq/releases/download/${YQ_LATEST}/yq_linux_${ARCH}" -qO "$DOTLOCAL"/bin/yq
+	chmod +x "$DOTLOCAL"/bin/yq
 fi
 
 if ! command -v node &>/dev/null
 then
-	wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.3/install.sh | bash
+	wget -qO- https://raw.githubusercontent.com/nvm-sh/nvm/v0.39.5/install.sh | bash
 	export NVM_DIR="$([ -z "${XDG_CONFIG_HOME-}" ] && printf %s "${HOME}/.nvm" || printf %s "${XDG_CONFIG_HOME}/nvm")"
 	[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh" # This loads nvm
-	nvm install v18
+	nvm install v21
 fi
 
 if ! command -v go &>/dev/null
 then
-	wget -qO- https://golang.org/dl/go1.19.linux-amd64.tar.gz | tar -zxf
+	GO_JSON=$(wget -qO- "https://golang.org/dl/?mode=json")
+  GO_LATEST_VERSION=$(echo "$GO_JSON" | grep -Po '"version": "\K.*?(?=")' | head -1)
+  GO_LATEST_URL=$(echo "$GO_JSON" | grep -Po '"filename": "\K.*?(?=")' | grep "linux-${ARCH}" | grep "$GO_LATEST_VERSION" | head -1)
+
+  if [ -z "${GO_LATEST_URL}" ]
+  then
+    echo 'Golang install URL not found, please fix the script' >&2
+    exit 1
+  fi
+
+  wget -qO- "https://golang.org/dl/${GO_LATEST_URL}" | tar -zxf -
+  cp -prf go/* "${DOTLOCAL}"
+  rm -rf go
 fi
 
 if ! command -v pip &>/dev/null
 then
-	curl https://bootstrap.pypa.io/get-pip.py | python3.11
+	curl https://bootstrap.pypa.io/get-pip.py | python3
 fi
 
 if ! command -v virtualenv &>/dev/null
 then
-	python3.11 -m pip install virtualenv
+	python3 -m pip install virtualenv
 fi
 
 if [ ! -d "$SRC_DIR" ]
@@ -60,12 +78,12 @@ fi
 
 if [ ! -d .venv ]
 then
-	python3.11 -m virtualenv ./.venv
+	python3 -m virtualenv ./.venv
 fi
 
 ./.venv/bin/pip install --no-cache-dir poetry
 ./.venv/bin/poetry export -f requirements.txt --output requirements.txt
-./.venv/bin/poetry export -f requirements.txt --dev --output requirements-dev.txt
+./.venv/bin/poetry export -f requirements.txt --with dev --output requirements-dev.txt
 ./.venv/bin/pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
 
 cd "$SRC_DIR"/website
@@ -86,7 +104,7 @@ tee "$HOME"/.config/systemd/user/authentik-server.service > /dev/null << EOF
 Description = Authentik Server (Web/API/SSO)
 
 [Service]
-ExecStart=/bin/bash -c 'source /home/authentik/src/.venv/bin/activate && python -m lifecycle.migrate && /home/authentik/src/authentik-server'
+ExecStart=/bin/bash -c 'source /home/authentik/src/.venv/bin/activate && python3 -m lifecycle.migrate && /home/authentik/src/authentik-server'
 WorkingDirectory=/home/authentik/src
 
 Restart=always
