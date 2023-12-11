@@ -14,9 +14,9 @@ PATH="${PATH}:${BIN_DIR}"
 
 cd "$BASE_DIR"
 
-if python3 -c 'import sys; sys.exit(sys.version_info < (3, 11, 1))' &>/dev/null
+if ! python3 -c 'import sys; sys.exit(sys.version_info < (3, 11, 1))' &>/dev/null
 then
-	wget -qO- https://www.python.org/ftp/python/3.11.1/Python-3.11.1.tgz | tar -zxf
+	wget -qO- https://www.python.org/ftp/python/3.11.1/Python-3.11.1.tgz | tar -zxf -
 	cd Python-3.11.1
 	./configure --enable-optimizations --prefix="$DOTLOCAL"
 	make altinstall
