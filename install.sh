@@ -81,7 +81,7 @@ then
 	python3 -m virtualenv ./.venv
 fi
 
-./.venv/bin/pip install --no-cache-dir poetry
+./.venv/bin/pip install --no-cache-dir poetry poetry-plugin-export
 ./.venv/bin/poetry export -f requirements.txt --output requirements.txt
 ./.venv/bin/poetry export -f requirements.txt --with dev --output requirements-dev.txt
 ./.venv/bin/pip install --no-cache-dir -r requirements.txt -r requirements-dev.txt
