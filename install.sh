@@ -83,6 +83,7 @@ then
 	python3 -m virtualenv ./.venv
 fi
 
+curl https://bootstrap.pypa.io/get-pip.py | ./.venv/bin/python3
 ./.venv/bin/pip install --no-cache-dir poetry poetry-plugin-export
 ./.venv/bin/poetry export -f requirements.txt --output requirements.txt
 ./.venv/bin/poetry export -f requirements.txt --with dev --output requirements-dev.txt
